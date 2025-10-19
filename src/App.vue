@@ -26,7 +26,9 @@
 import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
-
+import 'vfonts/Lato.css'
+import { defineComponent } from 'vue'
+import { NButton } from 'naive-ui'
 const router = useRouter();
 const authStore = useAuthStore();
 
