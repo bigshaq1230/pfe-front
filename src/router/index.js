@@ -6,7 +6,7 @@ const routes = [
     path: '/login',
     name: 'login',
     component: () => import('@/views/login.vue'),
-    meta: { requiresAuth: false }
+    meta: { requiresGuest: true }
   },
   {
     path: '/dashboard',
@@ -14,7 +14,6 @@ const routes = [
     component: () => import('@/views/dashboard.vue'),
     meta: { requiresAuth: true }
   },
-  
 
   {
     path: '/',
@@ -27,16 +26,18 @@ const router = createRouter({
   routes
 });
 
-router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore();
-
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    next('/login');
-  } else if (to.meta.roles && !authStore.hasAnyRole(to.meta.roles)) {
-    next('/dashboard');
-  } else {
-    next();
+router.beforeEach( async(to, from, next) => {
+  const authStore = useAuthStore()
+  if (!authStore.initialized && localStorage.getItem('token')) {
+    await authStore.initializeAuth();
   }
-});
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next('/login')
+  } else if (to.meta.requiresGuest && authStore.isAuthenticated) {
+    next('/dashboard') // or wherever you want to redirect
+  } else {
+    next()
+  }
+})
 
 export default router;

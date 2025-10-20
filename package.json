@@ -12,6 +12,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vicons/carbon": "^0.13.0",
+    "@vicons/fa": "^0.13.0",
+    "@vicons/ionicons5": "^0.13.0",
     "axios": "^1.12.2",
     "naive-ui": "^2.43.1",
     "pinia": "^3.0.3",
