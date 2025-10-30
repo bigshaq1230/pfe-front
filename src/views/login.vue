@@ -1,106 +1,182 @@
 <template>
-  <div class="login-container">
-    <div class="login-card">
-      <!-- Header -->
-      <div class="login-header">
-        <div class="logo">
-
-        </div>
-        <h1 class="login-title">Gestion Intelligente des Déchets</h1>
-        <p class="login-subtitle">Système municipal de gestion des déchets urbains</p>
+  <div class="auth-container">
+    <div class="auth-card card">
+      <div class="auth-header">
+        <h1>Connexion</h1>
+        <p>Accédez à votre compte Smart Waste</p>
       </div>
 
-      <!-- Login Form -->
-      <form @submit.prevent="handleLogin" class="login-form">
+      <form @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">
-          <label for="email" class="form-label">Adresse Email </label>
+          <label for="email">Email</label>
           <input
+            type="text"
             id="email"
-            v-model="loginData.email"
-            type="email"
-            class="form-input"
-            placeholder="votre@email.com"
+            v-model="credentials.email"
             required
-            :disabled="authStore.loading"
-           />
+            placeholder="votre@email.com"
+          >
         </div>
 
         <div class="form-group">
-          <label for="password" class="form-label">Mot de Passe</label>
+          <label for="password">Mot de passe</label>
           <input
-            id="password"
-            v-model="loginData.password"
             type="password"
-            class="form-input"
-            placeholder="Votre mot de passe"
+            id="password"
+            v-model="credentials.password"
             required
-            :disabled="authStore.loading"> </input>
+            placeholder="Votre mot de passe"
+          >
         </div>
 
-        <div v-if="errorMessage" class="error-message">
-          {{ errorMessage }}
-        </div>
-
-        <n-button
-        type="primary"
-        attr-type="submit"
-        :disabled ="authStore.loading || !isFormValid"
-          :class="{ 'loading': authStore.loading }"
+        <button
+          type="submit"
+          class="btn btn-primary btn-block"
+          :disabled="authStore.loading"
         >
-          <span v-if="!authStore.loading">Se Connecter</span>
-          <span v-else class="loading-text">Connexion...</span>
-        </n-button>
+          <span v-if="authStore.loading">Connexion...</span>
+          <span v-else>Se connecter</span>
+        </button>
+
+        <div v-if="authStore.error" class="error-message">
+          {{ authStore.error }}
+        </div>
       </form>
 
-
+      <div class="auth-footer">
+        <p>
+          Pas de compte ?
+          <router-link to="/register" class="auth-link">S'inscrire</router-link>
+        </p>
+      </div>
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/authStore';
-import { defineComponent } from 'vue'
-import { NButton,NInput } from 'naive-ui'
+<script>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
-const router = useRouter();
-const authStore = useAuthStore();
+export default {
+  name: 'Login',
+  setup() {
+    const credentials = ref({
+      email: '',
+      password: ''
+    })
 
-const loginData = reactive({
-  email: '',
-  password: ''
-});
+    const authStore = useAuthStore()
+    const router = useRouter()
 
-const errorMessage = ref('');
+    const handleLogin = async () => {
+      const result = await authStore.login(credentials.value)
+      if (result.success) {
+        router.push('/')
+      }
+    }
 
-const isFormValid = computed(() => {
-  return loginData.email && loginData.password;
-});
+    onMounted(() => {
+      // Rediriger si déjà connecté
+      if (authStore.isAuthenticated) {
+        router.push('/')
+      }
+    })
 
-const handleLogin = async () => {
-  errorMessage.value = '';
-
-  try {
-    await authStore.login(loginData.email, loginData.password);
-
-    // Redirect based on user role
-    const redirectPath = getRedirectPath(authStore.user.role);
-    await router.push(redirectPath);
-
-  } catch (error) {
-    errorMessage.value = error.message || 'Erreur de connexion. Veuillez réessayer.';
+    return {
+      credentials,
+      authStore,
+      handleLogin
+    }
   }
-};
-
-const getRedirectPath = (role) => {
-  const routes = {
-    admin: '/dashboard',
-    gestionnaire: '/dashboard',
-    agent: '/tournees',
-    responsable_environnement: '/dashboard'
-  };
-  return routes[role] || '/dashboard';
-};
-
+}
 </script>
+
+<style scoped>
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  padding: 2rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-header h1 {
+  color: #2e7d32;
+  margin-bottom: 0.5rem;
+}
+
+.auth-header p {
+  color: #666;
+}
+
+.auth-form {
+  margin-bottom: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #4caf50;
+}
+
+.btn-block {
+  width: 100%;
+  padding: 0.75rem;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.auth-footer {
+  text-align: center;
+  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
+}
+
+.auth-link {
+  color: #4caf50;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+</style>

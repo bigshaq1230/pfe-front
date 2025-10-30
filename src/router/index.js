@@ -1,43 +1,72 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '@/stores/authStore';
+import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
 const routes = [
   {
+    path: '/',
+    name: 'Dashboard',
+    component: () => import('../views/dashboard.vue'),
+    meta: { requiresAuth: true }
+  },
+  /* {
+    path: '/points-collecte',
+    name: 'PointsCollecte',
+    component: () => import('../views/PointsCollecte.vue'),
+    meta: { requiresAuth: true }
+  }, */
+/*   {
+    path: '/vehicules',
+    name: 'Vehicules',
+    component: () => import('../views/Vehicules.vue'),
+    meta: { requiresAuth: true }
+  }, */
+  {
+    path: '/employes',
+    name: 'Employes',
+    component: () => import('../views/employes.vue'),
+    meta: { requiresAuth: true }
+  },
+/*   {
+    path: '/tournees',
+    name: 'Tournees',
+    component: () => import('../views/Tournees.vue'),
+    meta: { requiresAuth: true }
+  }, */
+  {
     path: '/login',
-    name: 'login',
-    component: () => import('@/views/login.vue'),
+    name: 'Login',
+    component: () => import('../views/login.vue'),
     meta: { requiresGuest: true }
   },
   {
-    path: '/dashboard',
-    name: 'dashboard',
-    component: () => import('@/views/dashboard.vue'),
-    meta: { requiresAuth: true }
-  },
-
-  {
-    path: '/',
-    redirect: '/dashboard'
+    path: '/register',
+    name: 'Register',
+    component: () => import('../views/register.vue'),
+    meta: { requiresGuest: true }
   }
-];
+]
 
 const router = createRouter({
   history: createWebHistory(),
   routes
-});
+})
 
-router.beforeEach( async(to, from, next) => {
+// Garde de navigation
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
-  if (!authStore.initialized && localStorage.getItem('token')) {
-    await authStore.initializeAuth();
+
+  // Vérifier l'authentification si nécessaire
+  if (!authStore.user && authStore.token) {
+    await authStore.checkAuth()
   }
+
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')
   } else if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    next('/dashboard') // or wherever you want to redirect
+    next('/')
   } else {
     next()
   }
 })
 
-export default router;
+export default router
