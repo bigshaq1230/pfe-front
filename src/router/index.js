@@ -8,30 +8,20 @@ const routes = [
     component: () => import('../views/dashboard.vue'),
     meta: { requiresAuth: true }
   },
-  /* {
-    path: '/points-collecte',
-    name: 'PointsCollecte',
-    component: () => import('../views/PointsCollecte.vue'),
-    meta: { requiresAuth: true }
-  }, */
-/*   {
+
+  {
     path: '/vehicules',
     name: 'Vehicules',
-    component: () => import('../views/Vehicules.vue'),
+    component: () => import('../views/vehicules.vue'),
     meta: { requiresAuth: true }
-  }, */
+  },
   {
     path: '/employes',
     name: 'Employes',
     component: () => import('../views/employes.vue'),
     meta: { requiresAuth: true }
   },
-/*   {
-    path: '/tournees',
-    name: 'Tournees',
-    component: () => import('../views/Tournees.vue'),
-    meta: { requiresAuth: true }
-  }, */
+
   {
     path: '/login',
     name: 'Login',

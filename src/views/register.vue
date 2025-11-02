@@ -17,6 +17,15 @@
             placeholder="Votre nom complet"
           >
         </div>
+            <div class="form-group">
+          <label for="id">Email</label>
+          <input
+            type="number"
+            id="id"
+            v-model="userData.id"
+            required
+          >
+        </div>
 
         <div class="form-group">
           <label for="email">Email</label>
@@ -29,6 +38,18 @@
           >
         </div>
 
+            <div class="form-group">
+              <label>Zone d'affectation</label>
+              <select v-model="userData.zoneAffectation">
+                <option value="Nord">Nord</option>
+                <option value="Sud">Sud</option>
+                <option value="Est">Est</option>
+                <option value="Ouest">Ouest</option>
+                <option value="Centre">Centre</option>
+                <option value="Toutes zones">Toutes zones</option>
+              </select>
+              
+        </div>
         <div class="form-group">
           <label for="password">Mot de passe</label>
           <input
@@ -80,54 +101,42 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+const API_BASE = import.meta.env.VITE_API_BASE
+const userData = ref({
+  nom: '',
+  email: '',
+  password: '',
+  confirmPassword: ''
+})
 
-export default {
-  name: 'Register',
-  setup() {
-    const userData = ref({
-      nom: '',
-      email: '',
-      password: '',
-      confirmPassword: ''
-    })
+const authStore = useAuthStore()
+const router = useRouter()
 
-    const authStore = useAuthStore()
-    const router = useRouter()
+const passwordsMatch = computed(() =>
+  userData.value.password === userData.value.confirmPassword
+)
 
-    const passwordsMatch = computed(() =>
-      userData.value.password === userData.value.confirmPassword
-    )
+const handleRegister = async () => {
+  if (!passwordsMatch.value) return
 
-    const handleRegister = async () => {
-      if (!passwordsMatch.value) return
+  const { confirmPassword, ...registerData } = userData.value
+  const result = await authStore.register(registerData)
 
-      const { confirmPassword, ...registerData } = userData.value
-      const result = await authStore.register(registerData)
-
-      if (result.success) {
-        router.push('/')
-      }
-    }
-
-    onMounted(() => {
-      // Rediriger si déjà connecté
-      if (authStore.isAuthenticated) {
-        router.push('/')
-      }
-    })
-
-    return {
-      userData,
-      authStore,
-      passwordsMatch,
-      handleRegister
-    }
+  if (result.success) {
+    router.push('/')
   }
 }
+
+onMounted(() => {
+  // Rediriger si déjà connecté
+  if (authStore.isAuthenticated) {
+    router.push('/')
+  }
+})
 </script>
 
 <style scoped>

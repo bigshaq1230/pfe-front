@@ -69,7 +69,7 @@
         <tbody>
           <tr v-for="employe in employes" :key="employe.id">
             <td>
-              <strong>{{ employe.matricule }}</strong>
+              <strong>EMP-{{ employe.id }}</strong>
             </td>
             <td>
               <div class="employe-info">
@@ -292,240 +292,207 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 
-const API_BASE = 'http://localhost:3000/api'
+const API_BASE = import.meta.env.VITE_API_BASE
 
-export default {
-  name: 'Employes',
-  setup() {
-    const employes = ref([])
-    const loading = ref(false)
-    const showAddModal = ref(false)
-    const showEditModal = ref(false)
-    const editingEmploye = ref(null)
-    const stats = ref({
-      total: 0,
-      actifs: 0,
-      disponibles: 0,
-      tauxActivation: 0
+const employes = ref([])
+const loading = ref(false)
+const showAddModal = ref(false)
+const showEditModal = ref(false)
+const editingEmploye = ref(null)
+const stats = ref({
+  total: 0,
+  actifs: 0,
+  disponibles: 0,
+  tauxActivation: 0
+})
+
+const filters = ref({
+  search: '',
+  statut: '',
+  poste: ''
+})
+
+const pagination = ref({
+  currentPage: 1,
+  totalPages: 1,
+  hasNext: false,
+  hasPrev: false
+})
+
+const formData = ref({
+  nom: '',
+  prenom: '',
+  email: '',
+  telephone: '',
+  poste: '',
+  specialite: [],
+  dateEmbauche: '',
+  salaire: 0,
+  zoneAffectation: '',
+  permis: []
+})
+
+const specialites = [
+  'collecte-ordures',
+  'maintenance-equipement',
+  'reparation-vehicules'
+]
+
+const typesPermis = ['A', 'B', 'C', 'D', 'E']
+
+// Computed pour les employés filtrés
+const filteredEmployes = computed(() => {
+  return employes.value
+})
+
+// Méthodes
+const loadEmployes = async (page = 1) => {
+  loading.value = true
+  try {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: '10',
+      ...filters.value
     })
 
-    const filters = ref({
-      search: '',
-      statut: '',
-      poste: ''
-    })
-
-    const pagination = ref({
-      currentPage: 1,
-      totalPages: 1,
-      hasNext: false,
-      hasPrev: false
-    })
-
-    const formData = ref({
-      nom: '',
-      prenom: '',
-      email: '',
-      telephone: '',
-      poste: '',
-      specialite: [],
-      dateEmbauche: '',
-      salaire: 0,
-      zoneAffectation: '',
-      permis: []
-    })
-
-    const specialites = [
-      'collecte-ordures',
-      'tri-dechets',
-      'conduite-poids-lourd',
-      'maintenance-conteneurs',
-      'reparation-vehicules',
-      'relation-client',
-      'gestion-equipe'
-    ]
-
-    const typesPermis = ['A', 'B', 'C', 'D', 'E']
-
-    // Computed pour les employés filtrés
-    const filteredEmployes = computed(() => {
-      return employes.value
-    })
-
-    // Méthodes
-    const loadEmployes = async (page = 1) => {
-      loading.value = true
-      try {
-        const params = new URLSearchParams({
-          page: page.toString(),
-          limit: '10',
-          ...filters.value
-        })
-
-        const response = await axios.get(`${API_BASE}/employes?${params}`)
-        if (response.data.success) {
-          employes.value = response.data.data
-          pagination.value = response.data.pagination
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement des employés:', error)
-      } finally {
-        loading.value = false
-      }
+    const response = await axios.get(`${API_BASE}/employes?${params}`)
+    if (response.data.success) {
+      employes.value = response.data.data
+      pagination.value = response.data.pagination
     }
-
-    const loadStats = async () => {
-      try {
-        const response = await axios.get(`${API_BASE}/employes/statistiques/general`)
-        if (response.data.success) {
-          stats.value = response.data.data
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement des statistiques:', error)
-      }
-    }
-
-    const changePage = (page) => {
-      if (page >= 1 && page <= pagination.value.totalPages) {
-        pagination.value.currentPage = page
-        loadEmployes(page)
-      }
-    }
-
-    const formatPoste = (poste) => {
-      const postes = {
-        'chauffeur': 'Chauffeur',
-        'agent-collecte': 'Agent Collecte',
-        'technicien-maintenance': 'Technicien',
-        'superviseur': 'Superviseur'
-      }
-      return postes[poste] || poste
-    }
-
-    const formatDisponibilite = (disponibilite) => {
-      const disponibilites = {
-        'disponible': 'Disponible',
-        'en-congé': 'En Congé',
-        'en-mission': 'En Mission',
-        'maladie': 'Maladie',
-        'non-disponible': 'Non Disponible'
-      }
-      return disponibilites[disponibilite] || disponibilite
-    }
-
-    const formatSpecialite = (specialite) => {
-      const specialites = {
-        'collecte-ordures': 'Collecte Ordures',
-        'tri-dechets': 'Tri Déchets',
-        'conduite-poids-lourd': 'Conduite Poids Lourd',
-        'maintenance-conteneurs': 'Maintenance Conteneurs',
-        'reparation-vehicules': 'Réparation Véhicules',
-        'relation-client': 'Relation Client',
-        'gestion-equipe': 'Gestion Équipe'
-      }
-      return specialites[specialite] || specialite
-    }
-
-    const viewEmploye = (employe) => {
-      // Implémenter la vue détaillée
-      console.log('Voir employé:', employe)
-    }
-
-    const editEmploye = (employe) => {
-      editingEmploye.value = employe
-      formData.value = { ...employe }
-      showEditModal.value = true
-    }
-
-    const toggleEmployeStatus = async (employe) => {
-      try {
-        const newStatus = employe.statut === 'actif' ? 'inactif' : 'actif'
-        const newDisponibilite = newStatus === 'actif' ? 'disponible' : 'non-disponible'
-
-        await axios.patch(`${API_BASE}/employes/${employe.id}`, {
-          statut: newStatus,
-          disponibilite: newDisponibilite
-        })
-
-        await loadEmployes(pagination.value.currentPage)
-        await loadStats()
-      } catch (error) {
-        console.error('Erreur lors du changement de statut:', error)
-      }
-    }
-
-    const submitEmployeForm = async () => {
-      loading.value = true
-      try {
-        if (showAddModal.value) {
-          await axios.post(`${API_BASE}/employes`, formData.value)
-        } else {
-          await axios.put(`${API_BASE}/employes/${editingEmploye.value.id}`, formData.value)
-        }
-
-        closeModal()
-        await loadEmployes(pagination.value.currentPage)
-        await loadStats()
-      } catch (error) {
-        console.error('Erreur lors de l\'enregistrement:', error)
-      } finally {
-        loading.value = false
-      }
-    }
-
-    const closeModal = () => {
-      showAddModal.value = false
-      showEditModal.value = false
-      editingEmploye.value = null
-      formData.value = {
-        nom: '',
-        prenom: '',
-        email: '',
-        telephone: '',
-        poste: '',
-        specialite: [],
-        dateEmbauche: '',
-        salaire: 0,
-        zoneAffectation: '',
-        permis: []
-      }
-    }
-
-    // Watchers pour les filtres
-    onMounted(() => {
-      loadEmployes()
-      loadStats()
-    })
-
-    return {
-      employes,
-      loading,
-      showAddModal,
-      showEditModal,
-      stats,
-      filters,
-      pagination,
-      formData,
-      specialites,
-      typesPermis,
-      filteredEmployes,
-      loadEmployes,
-      changePage,
-      formatPoste,
-      formatDisponibilite,
-      formatSpecialite,
-      viewEmploye,
-      editEmploye,
-      toggleEmployeStatus,
-      submitEmployeForm,
-      closeModal
-    }
+  } catch (error) {
+    console.error('Erreur lors du chargement des employés:', error)
+  } finally {
+    loading.value = false
   }
 }
+
+const loadStats = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/employes/statistiques/general`)
+    if (response.data.success) {
+      stats.value = response.data.data
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement des statistiques:', error)
+  }
+}
+
+const changePage = (page) => {
+  if (page >= 1 && page <= pagination.value.totalPages) {
+    pagination.value.currentPage = page
+    loadEmployes(page)
+  }
+}
+
+const formatPoste = (poste) => {
+  const postes = {
+    'chauffeur': 'Chauffeur',
+    'agent-collecte': 'Agent Collecte',
+    'technicien-maintenance': 'Technicien',
+    'superviseur': 'Superviseur'
+  }
+  return postes[poste] || poste
+}
+
+const formatDisponibilite = (disponibilite) => {
+  const disponibilites = {
+    'disponible': 'Disponible',
+    'en-congé': 'En Congé',
+    'en-mission': 'En Mission',
+    'maladie': 'Maladie',
+    'non-disponible': 'Non Disponible'
+  }
+  return disponibilites[disponibilite] || disponibilite
+}
+
+const formatSpecialite = (specialite) => {
+  const specialites = {
+    'collecte-ordures': 'Collecte Ordures',
+    'tri-dechets': 'Tri Déchets',
+    'conduite-poids-lourd': 'Conduite Poids Lourd',
+    'maintenance-conteneurs': 'Maintenance Conteneurs',
+    'reparation-vehicules': 'Réparation Véhicules',
+    'relation-client': 'Relation Client',
+    'gestion-equipe': 'Gestion Équipe'
+  }
+  return specialites[specialite] || specialite
+}
+
+const viewEmploye = (employe) => {
+  // Implémenter la vue détaillée
+  console.log('Voir employé:', employe)
+}
+
+const editEmploye = (employe) => {
+  editingEmploye.value = employe
+  formData.value = { ...employe }
+  showEditModal.value = true
+}
+
+const toggleEmployeStatus = async (employe) => {
+  try {
+    const newStatus = employe.statut === 'actif' ? 'inactif' : 'actif'
+    const newDisponibilite = newStatus === 'actif' ? 'disponible' : 'non-disponible'
+
+    await axios.patch(`${API_BASE}/employes/${employe.id}`, {
+      statut: newStatus,
+      disponibilite: newDisponibilite
+    })
+
+    await loadEmployes(pagination.value.currentPage)
+    await loadStats()
+  } catch (error) {
+    console.error('Erreur lors du changement de statut:', error)
+  }
+}
+
+const submitEmployeForm = async () => {
+  loading.value = true
+  try {
+    if (showAddModal.value) {
+      await axios.post(`${API_BASE}/employes`, formData.value)
+    } else {
+      await axios.put(`${API_BASE}/employes/${editingEmploye.value.id}`, formData.value)
+    }
+
+    closeModal()
+    await loadEmployes(pagination.value.currentPage)
+    await loadStats()
+  } catch (error) {
+    console.error('Erreur lors de l\'enregistrement:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const closeModal = () => {
+  showAddModal.value = false
+  showEditModal.value = false
+  editingEmploye.value = null
+  formData.value = {
+    nom: '',
+    prenom: '',
+    email: '',
+    telephone: '',
+    poste: '',
+    specialite: [],
+    dateEmbauche: '',
+    salaire: 0,
+    zoneAffectation: '',
+    permis: []
+  }
+}
+
+// Watchers pour les filtres
+onMounted(() => {
+  loadEmployes()
+  loadStats()
+})
 </script>
 
 <style scoped>

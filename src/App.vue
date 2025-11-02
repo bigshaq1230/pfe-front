@@ -4,11 +4,11 @@
       <div class="nav-container">
         <h1 class="nav-logo">♻️ Smart Waste</h1>
         <div class="nav-links">
-          <router-link to="/">Tableau de bord</router-link>
-          <router-link to="/points-collecte">Points de Collecte</router-link>
-          <router-link to="/vehicules">Véhicules</router-link>
-          <router-link to="/employes">Employés</router-link>
-          <router-link to="/tournees">Tournées</router-link>
+          <ul>
+            <li><router-link to="/">Tableau de bord</router-link></li>
+            <li><router-link to="/vehicules">Véhicules</router-link></li>
+            <li><router-link to="/employes">Employés</router-link></li>
+          </ul>
         </div>
         <div class="nav-user">
           <span class="user-info">Bonjour, {{ authStore.userInfo.nom }}</span>
@@ -27,54 +27,12 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { useAuthStore } from './stores/auth'
 
-export default {
-  name: 'App',
-  setup() {
-    const authStore = useAuthStore()
+const authStore = useAuthStore()
 
-    const handleLogout = () => {
-      authStore.logout()
-    }
-
-    return {
-      authStore,
-      handleLogout
-    }
-  }
+const handleLogout = () => {
+  authStore.logout()
 }
 </script>
-
-<style scoped>
-.nav-user {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.user-info {
-  color: white;
-  font-weight: 500;
-}
-
-.btn-logout {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.btn-logout:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.auth-page {
-  padding: 0;
-  min-height: 100vh;
-}
-</style>
